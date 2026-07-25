@@ -43,6 +43,7 @@
     "installerDisclaimer1": "Steam Homebrew та Millennium не пов'язані з",
     "installerDisclaimer2": "Steam®, Valve або їхніми партнерами.",
     "installerFinish": "Завершити",
+    "installerRetry": "Повторити",
 
     "errorWhoops": "Ой!",
     "errorNetwork": "Не вдалося підключитися до GitHub API!\n\n%s",

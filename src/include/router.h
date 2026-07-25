@@ -78,6 +78,16 @@ class RouterNav
         this->components = components;
     }
 
+    void resetToHome()
+    {
+        currentIndex = 0;
+        targetIndex = 0;
+        isAnimating = false;
+        animTime = 0.0f;
+        softCanGoBack = false;
+        softCanGoForward = false;
+    }
+
   private:
     std::vector<Component> components;
 

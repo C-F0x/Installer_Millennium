@@ -277,7 +277,7 @@ void StartInstaller(std::string steamPath, nlohmann::json releaseInfo, nlohmann:
     OnFinishInstall();
 }
 
-void RenderFailed(float xPos, const std::string& reason)
+void RenderFailed(std::shared_ptr<RouterNav> router, float xPos, const std::string& reason)
 {
     ImGuiIO& io = GetIO();
     ImGuiViewport* viewport = GetMainViewport();
@@ -305,6 +305,25 @@ void RenderFailed(float xPos, const std::string& reason)
     }
     if (IsItemClicked()) {
         OpenUrl("https://docs.steambrew.app/users/getting-started/troubleshooting");
+    }
+
+    PushStyleColor(ImGuiCol_Text, ImVec4(0.408f, 0.525f, 0.91f, 1.0f));
+    const char* retryText = Locale::Get("installerRetry");
+    SetCursorPos({ xPos + (viewport->Size.x) / 2 - (CalcTextSize(retryText).x / 2), viewport->Size.y / 2 + ScaleY(45) });
+    Text("%s", retryText);
+    PopStyleColor();
+
+    if (IsItemHovered()) {
+        SetMouseCursor(ImGuiMouseCursor_Hand);
+    }
+    if (IsItemClicked()) {
+        scheduler = std::make_unique<TaskScheduler>();
+        progress = 0.0f;
+        easedProgress = 0.0f;
+        targetProgress = 0.0f;
+        hasTaskSchedulerFinished.store(false, std::memory_order_relaxed);
+        statusText.clear();
+        router->resetToHome();
     }
 }
 
@@ -338,7 +357,7 @@ const void RenderInstaller(std::shared_ptr<RouterNav> router, float xPos)
     if (hasFailed) {
         hasTaskSchedulerFinished.store(true);
         easedProgress = 1.0f;
-        RenderFailed(xPos, failureReason);
+        RenderFailed(router, xPos, failureReason);
     } else {
 
         if (!shouldRenderCompleteModal) {

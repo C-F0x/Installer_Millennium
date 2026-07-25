@@ -43,6 +43,7 @@
     "installerDisclaimer1": "A Steam Homebrew és a Millennium nem áll kapcsolatban",
     "installerDisclaimer2": "a Steam®-mel, a Valve-vel vagy partnereikkel.",
     "installerFinish": "Befejezés",
+    "installerRetry": "Újrapróbálkozás",
 
     "errorWhoops": "Hoppá!",
     "errorNetwork": "Nem sikerült csatlakozni a GitHub API-hoz!\n\n%s",

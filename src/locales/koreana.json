@@ -43,6 +43,7 @@
     "installerDisclaimer1": "Steam Homebrew & Millennium은",
     "installerDisclaimer2": "Steam®, Valve 또는 그 파트너사와 무관합니다.",
     "installerFinish": "완료",
+    "installerRetry": "재시도",
 
     "errorWhoops": "이런!",
     "errorNetwork": "GitHub API에 연결하지 못했습니다!\n\n%s",

@@ -43,6 +43,7 @@
     "installerDisclaimer1": "Steam Homebrew & Millennium är inte kopplade till",
     "installerDisclaimer2": "Steam®, Valve eller deras partners.",
     "installerFinish": "Slutför",
+    "installerRetry": "Försök Igen",
 
     "errorWhoops": "Hoppsan!",
     "errorNetwork": "Misslyckades med att ansluta till GitHub API!\n\n%s",

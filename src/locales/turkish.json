@@ -43,6 +43,7 @@
     "installerDisclaimer1": "Steam Homebrew & Millennium ile bağlantılı değildir",
     "installerDisclaimer2": "Steam®, Valve veya ortakları.",
     "installerFinish": "Bitir",
+    "installerRetry": "Tekrar Dene",
 
     "errorWhoops": "Hay aksi!",
     "errorNetwork": "GitHub API'ye bağlanılamadı!\n\n%s",
