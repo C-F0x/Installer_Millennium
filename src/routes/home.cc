@@ -42,6 +42,7 @@
 #include <atomic>
 #include <imspinner.h>
 #include <worker.h>
+#include <source_manager.h>
 
 using namespace ImGui;
 using namespace ImSpinner;
@@ -237,7 +238,7 @@ const void RenderHome(std::shared_ptr<RouterNav> router, float xPos)
 
                     const auto StartInstall = [router]()
                     {
-                        if (FetchVersionInfo()) {
+                        if (IsSourceOffline() || FetchVersionInfo()) {
                             router->navigateNext();
                         }
                         isLoading.store(false, std::memory_order_relaxed);

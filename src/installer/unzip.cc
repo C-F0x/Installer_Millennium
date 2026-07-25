@@ -235,3 +235,36 @@ bool ExtractZippedArchive(const char* zipFilePath, const char* outputDirectory, 
     unzClose(zipfile);
     return success;
 }
+
+bool ValidateMillenniumZip(const char* zipFilePath)
+{
+    unzFile zipfile = unzOpen(zipFilePath);
+    if (!zipfile) {
+        return false;
+    }
+
+    bool hasMillenniumDir = false;
+
+    if (unzGoToFirstFile(zipfile) != UNZ_OK) {
+        unzClose(zipfile);
+        return false;
+    }
+
+    do {
+        char fileName[4096];
+        unz_file_info fileInfo;
+        if (unzGetCurrentFileInfo(zipfile, &fileInfo, fileName, sizeof(fileName), NULL, 0, NULL, 0) != UNZ_OK) {
+            continue;
+        }
+
+        // Check for millennium/ directory at root level
+        std::string name(fileName);
+        if (name.find("millennium/") == 0 || name.find("millennium\\") == 0) {
+            hasMillenniumDir = true;
+            break;
+        }
+    } while (unzGoToNextFile(zipfile) == UNZ_OK);
+
+    unzClose(zipfile);
+    return hasMillenniumDir;
+}

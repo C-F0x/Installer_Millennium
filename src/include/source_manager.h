@@ -29,43 +29,24 @@
  */
 
 #pragma once
+#include <string>
 
-#include <memory>
-#include <router.h>
-#include <nlohmann/json.hpp>
-
-bool RenderTitleBarComponent(std::shared_ptr<RouterNav> router);
-const void RenderHome(std::shared_ptr<RouterNav> router, float xPos);
-const void RenderInstallPrompt(std::shared_ptr<RouterNav> router, float xPos);
-const void RenderInstaller(std::shared_ptr<RouterNav> router, float xPos);
-const void RenderUninstallSelect(std::shared_ptr<RouterNav> router, float xPos);
-
-const void RenderBottomNavBar(const char* identifier, float xPos, std::function<void()> buttonRenderCallback, bool setPosManually = false);
-
-void StartInstaller(std::string steamPath, nlohmann::json releaseInfo, nlohmann::json osReleaseInfo);
-void StartInstaller(std::string steamPath, std::string localZipPath);
-void InitializeUninstaller();
-const bool FetchVersionInfo();
-
-enum MessageLevel
+enum class SourceMode
 {
-    Error,
-    Info,
-    Warning
+    GitHub,
+    GH_Proxy,
+    Offline
 };
 
-void ShowMessageBox(std::string title, std::string body, MessageLevel level);
-void RenderMessageBoxes();
+inline SourceMode g_SourceMode = SourceMode::GitHub;
+inline std::string g_ServerPrefix; // e.g. "https://gh-proxy.org/"
 
-struct CheckBoxState
+inline bool IsSourceOffline()
 {
-    bool isHovered;
-    bool isChecked;
+    return g_SourceMode == SourceMode::Offline;
+}
 
-    CheckBoxState(bool isChecked) : isHovered(false), isChecked(false)
-    {
-        this->isChecked = isChecked;
-    }
-};
-
-const CheckBoxState* RenderCheckBox(bool checked, std::string description, std::string tooltipText = nullptr, bool disabled = false, bool endChild = false);
+inline const char* GetServerPrefix()
+{
+    return (g_SourceMode == SourceMode::GH_Proxy && !g_ServerPrefix.empty()) ? g_ServerPrefix.c_str() : nullptr;
+}

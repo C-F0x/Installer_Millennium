@@ -38,6 +38,7 @@
 #include <format>
 #include <nlohmann/json.hpp>
 #include "components.h"
+#include "source_manager.h"
 
 static size_t WriteByteCallback(char* ptr, size_t size, size_t nmemb, std::string* data)
 {
@@ -184,7 +185,16 @@ static Response GetEx(const char* url, int maxRetries = 3, int timeoutSeconds = 
         return result;
     }
 
-    curl_easy_setopt(curl, CURLOPT_URL, url);
+    // Apply GH-Proxy prefix if enabled
+    std::string prefixedUrl;
+    const char* prefix = GetServerPrefix();
+    const char* effectiveUrl = url;
+    if (prefix) {
+        prefixedUrl = std::string(prefix) + url;
+        effectiveUrl = prefixedUrl.c_str();
+    }
+
+    curl_easy_setopt(curl, CURLOPT_URL, effectiveUrl);
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteByteCallback);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &result.body);
     curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, HeaderCallback);
@@ -294,7 +304,15 @@ static bool downloadFile(const std::string& url, const std::string& outputPath, 
 
     ProgressData progressData = { fileSize, progressCallback, std::chrono::steady_clock::now(), showProgress };
 
-    curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+    // Apply GH-Proxy prefix if enabled
+    const char* prefix = GetServerPrefix();
+    std::string prefixedUrl;
+    std::string effectiveUrl = url;
+    if (prefix) {
+        effectiveUrl = std::string(prefix) + url;
+    }
+
+    curl_easy_setopt(curl, CURLOPT_URL, effectiveUrl.c_str());
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeCallback);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &writeData);
     curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);

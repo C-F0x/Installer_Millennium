@@ -46,6 +46,8 @@
 #include <mini/ini.h>
 #include <format>
 #include <worker.h>
+#include <source_manager.h>
+#include <unzip.h>
 
 using namespace ImGui;
 
@@ -225,6 +227,7 @@ const bool FetchVersionInfo()
 const void RenderInstallPrompt(std::shared_ptr<RouterNav> router, float xPos)
 {
     static std::string steamPath = GetSteamPath();
+    static std::string offlineZipPath;
 
     ImGuiIO& io = GetIO();
     ImGuiViewport* viewport = GetMainViewport();
@@ -327,8 +330,48 @@ const void RenderInstallPrompt(std::shared_ptr<RouterNav> router, float xPos)
         PopStyleColor(2);
         PopStyleVar(3);
 
-        SetCursorPosY(GetCursorPosY() + ScaleY(100));
-        PushStyleColor(ImGuiCol_Text, ImVec4(0.422f, 0.425f, 0.441f, 1.0f));
+        if (IsSourceOffline()) {
+            // ── Offline: Millennium zip path + warning ──────────────────────
+            SetCursorPosY(GetCursorPosY() + ScaleY(30));
+            PushStyleColor(ImGuiCol_Text, ImVec4(0.422f, 0.425f, 0.441f, 1.0f));
+            Text("%s", Locale::Get("offlineMillenniumPath"));
+            PopStyleColor();
+            Spacing();
+            Spacing();
+
+            PushStyleVar(ImGuiStyleVar_FrameRounding, 4);
+            PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(ScaleX(10), ScaleY(10)));
+            PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
+            PushStyleColor(ImGuiCol_Border, ImVec4(0.18f, 0.184f, 0.192f, 1.0f));
+            PushItemWidth(GetContentRegionAvail().x - ScaleX(55));
+            InputText("##MillenniumZipPath", &offlineZipPath, ImGuiInputTextFlags_ReadOnly);
+            PopItemWidth();
+
+            SameLine();
+            PushStyleColor(ImGuiCol_Button, ImVec4(0.098f, 0.102f, 0.11f, 1.0f));
+            PushFont(io.Fonts->Fonts[1]);
+            if (Button("...##OfflineZipPicker", ImVec2(GetContentRegionAvail().x, ScaleY(44)))) {
+                auto path = OpenFileDialog();
+                if (!path.empty()) {
+                    if (ValidateMillenniumZip(path.c_str())) {
+                        offlineZipPath = path;
+                    } else {
+                        ShowMessageBox("Whoops!", "The selected file does not appear to be a valid Millennium package.", Error);
+                    }
+                }
+            }
+            PopFont();
+            PopStyleColor(2);
+            PopStyleVar(3);
+
+            Spacing();
+            Spacing();
+            PushStyleColor(ImGuiCol_Text, ImVec4(0.8f, 0.6f, 0.2f, 1.0f));
+            Text("%s", Locale::Get("offlineAtYourOwnRisk"));
+            PopStyleColor();
+        } else {
+            SetCursorPosY(GetCursorPosY() + ScaleY(100));
+            PushStyleColor(ImGuiCol_Text, ImVec4(0.422f, 0.425f, 0.441f, 1.0f));
 
         std::string currentTag = selectedRelease.contains("tag_name") ? selectedRelease["tag_name"].get<std::string>() : std::string("(none)");
         { char buf[512]; snprintf(buf, sizeof(buf), Locale::Get("installVersion"), currentTag.c_str()); Text("%s", buf); }
@@ -412,6 +455,7 @@ const void RenderInstallPrompt(std::shared_ptr<RouterNav> router, float xPos)
         { char buf[256]; snprintf(buf, sizeof(buf), Locale::Get("installDownloadMB"), osReleaseInfo.contains("size") ? osReleaseInfo["size"].get<float>() / (1024.0f * 1024.0f) : 0.0f); Text("%s", buf); }
 
         PopStyleColor();
+        } // end if (IsSourceOffline()) else
     }
     EndChild();
     PopStyleColor();
@@ -425,12 +469,20 @@ const void RenderInstallPrompt(std::shared_ptr<RouterNav> router, float xPos)
         PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(currentColor, currentColor, currentColor, 1.0f));
 
         if (Button(Locale::Get("installButton"), ImVec2(xPos + GetContentRegionAvail().x, GetContentRegionAvail().y))) {
-            auto path = steamPath;
-            auto release = selectedRelease;
-            auto osRelease = osReleaseInfo;
-            GetWorker().run([path, release, osRelease]() {
-                StartInstaller(path, release, osRelease);
-            });
+            if (IsSourceOffline()) {
+                auto path = steamPath;
+                auto zipPath = offlineZipPath;
+                GetWorker().run([path, zipPath]() {
+                    StartInstaller(path, zipPath);
+                });
+            } else {
+                auto path = steamPath;
+                auto release = selectedRelease;
+                auto osRelease = osReleaseInfo;
+                GetWorker().run([path, release, osRelease]() {
+                    StartInstaller(path, release, osRelease);
+                });
+            }
             router->navigateNext();
         }
 

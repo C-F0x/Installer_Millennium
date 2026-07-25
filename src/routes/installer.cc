@@ -277,6 +277,35 @@ void StartInstaller(std::string steamPath, nlohmann::json releaseInfo, nlohmann:
     OnFinishInstall();
 }
 
+TaskScheduler::TaskResult ExtractLocalZip(std::unique_ptr<double>& progress, const std::string& zipPath, const std::string& steamPath)
+{
+    statusText = Locale::Get("installerInstalling");
+    double currentFileProgress = 0.0;
+    if (!ExtractZippedArchive(zipPath.c_str(), steamPath.c_str(), progress.get(), &currentFileProgress)) {
+        return { false, "Failed to extract release assets. The file may be corrupt or the disk may be full." };
+    }
+    return { true, "success" };
+}
+
+void StartInstaller(std::string steamPath, std::string localZipPath)
+{
+    KillSteamProcess();
+
+    g_steamPath = steamPath;
+
+    progress = 0.0f;
+    easedProgress = 0.0f;
+    targetProgress = 0.0f;
+
+    std::cout << "[installer] scheduling offline extract task" << std::endl;
+    scheduler->addTask(std::bind(ExtractLocalZip, std::placeholders::_1, localZipPath, steamPath));
+    std::cout << "[installer] running scheduler (offline)" << std::endl;
+    scheduler->run();
+
+    std::cout << "[installer] calling OnFinishInstall()" << std::endl;
+    OnFinishInstall();
+}
+
 void RenderFailed(std::shared_ptr<RouterNav> router, float xPos, const std::string& reason)
 {
     ImGuiIO& io = GetIO();

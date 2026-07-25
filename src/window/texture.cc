@@ -45,6 +45,7 @@ GLuint excludedIconTexture;
 GLuint errorIconTexture;
 GLuint successIconTexture;
 GLuint languageIconTexture;
+GLuint globeIconTexture;
 
 bool LoadTextureFromMemory(const void* data, size_t data_size, GLuint* out_texture, int* out_width, int* out_height)
 {
@@ -87,4 +88,5 @@ void LoadTextures()
     LoadTextureFromMemory(errorIcon, sizeof(errorIcon), &errorIconTexture);
     LoadTextureFromMemory(successIcon, sizeof(successIcon), &successIconTexture);
     LoadTextureFromMemory(languageIcon, sizeof(languageIcon), &languageIconTexture);
+    LoadTextureFromMemory(globeIcon, sizeof(globeIcon), &globeIconTexture);
 }

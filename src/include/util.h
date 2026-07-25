@@ -249,6 +249,68 @@ static std::optional<std::string> SelectNewSteamPath()
 static std::optional<std::string> SelectNewSteamPath() { return {}; }
 #endif
 
+#ifdef _WIN32
+static std::string OpenFileDialog(const char* filterPattern = "ZIP Files (*.zip)\0*.zip\0")
+{
+    const auto WStringToString = [](const std::wstring& wstr) -> std::string
+    {
+        if (wstr.empty()) return {};
+        size_t size_needed = std::wcstombs(nullptr, wstr.c_str(), 0) + 1;
+        std::string str(size_needed, 0);
+        std::wcstombs(&str[0], wstr.c_str(), size_needed);
+        str.pop_back();
+        return str;
+    };
+
+    if (FAILED(CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED))) {
+        return {};
+    }
+
+    IFileOpenDialog* pFileOpen = nullptr;
+    if (FAILED(CoCreateInstance(CLSID_FileOpenDialog, nullptr, CLSCTX_ALL, IID_IFileOpenDialog, reinterpret_cast<void**>(&pFileOpen)))) {
+        CoUninitialize();
+        return {};
+    }
+
+    // Set file type filter
+    std::wstring wFilter(filterPattern, filterPattern + strlen(filterPattern) + 1);
+    wFilter += L'\0';
+    COMDLG_FILTERSPEC filterSpec;
+    filterSpec.pszName = L"ZIP Files (*.zip)";
+    filterSpec.pszSpec = L"*.zip";
+    pFileOpen->SetFileTypes(1, &filterSpec);
+
+    if (FAILED(pFileOpen->Show(nullptr))) {
+        pFileOpen->Release();
+        CoUninitialize();
+        return {};
+    }
+
+    IShellItem* pItem = nullptr;
+    if (FAILED(pFileOpen->GetResult(&pItem))) {
+        pFileOpen->Release();
+        CoUninitialize();
+        return {};
+    }
+
+    wchar_t* filePath = nullptr;
+    std::string result;
+    if (SUCCEEDED(pItem->GetDisplayName(SIGDN_FILESYSPATH, &filePath))) {
+        if (filePath) {
+            result = WStringToString(filePath);
+            CoTaskMemFree(filePath);
+        }
+    }
+
+    pItem->Release();
+    pFileOpen->Release();
+    CoUninitialize();
+    return result;
+}
+#else
+static std::string OpenFileDialog(const char* filterPattern = nullptr) { return {}; }
+#endif
+
 static std::string ToTimeAgo(const std::string& isoTimestamp)
 {
     std::tm tm = {};

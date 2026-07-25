@@ -41,3 +41,5 @@
  bool IsDirectoryPath(const std::filesystem::path& path);
 
  bool ExtractZippedArchive(const char *zipFilePath, const char *outputDirectory, double* overallProgress, double* fileProgress);
+
+ bool ValidateMillenniumZip(const char* zipFilePath);

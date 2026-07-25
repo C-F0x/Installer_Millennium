@@ -39,6 +39,7 @@
 #include <format>
 #include <util.h>
 #include <renderer.h>
+#include <source_manager.h>
 
 using namespace ImGui;
 
@@ -79,8 +80,92 @@ const void RenderBottomNavBar(const char* identifier, float xPos, std::function<
 
         const float buttonPos = GetCursorPosY();
 
-        SetCursorPosX(xPos + GetCursorPosX() + GetContentRegionAvail().x - FooterContainerWidth - ScaleX(55));
+        SetCursorPosX(xPos + GetCursorPosX() + GetContentRegionAvail().x - FooterContainerWidth - ScaleX(110));
         SetCursorPosY(GetCursorPosY() + ScaleY(10));
+
+        // ── Source (globe) button ──────────────────────────────────────────
+        Image((ImTextureID)(intptr_t)globeIconTexture, ImVec2(ScaleX(30), ScaleY(30)));
+
+        static bool isGlobeButtonHovered = false;
+        float globeTooltipAlpha = EaseInOutFloat(std::format("##GlobeTooltipAlpha{}", identifier).c_str(), 0.f, 1.f, isGlobeButtonHovered, 0.3f);
+
+        if (globeTooltipAlpha != 0.f) {
+            SetMouseCursor(ImGuiMouseCursor_Hand);
+            PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
+            PushStyleColor(ImGuiCol_Border, ImVec4(0.18f, 0.184f, 0.192f, 1.0f));
+            PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 1.0f, 1.0f, 1.0f));
+            PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(ScaleX(10), ScaleY(10)));
+            PushStyleVar(ImGuiStyleVar_WindowRounding, 6);
+            PushStyleVar(ImGuiStyleVar_Alpha, globeTooltipAlpha);
+            PushStyleColor(ImGuiCol_PopupBg, ImVec4(0.098f, 0.102f, 0.11f, 1.0f));
+            SetTooltip("%s", Locale::Get("tooltipSource"));
+            PopStyleVar(4);
+            PopStyleColor(3);
+        }
+
+        if (IsItemClicked())
+            OpenPopup("##SourcePopup");
+
+        isGlobeButtonHovered = IsItemHovered() || (IsItemHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem) && IsMouseDown(ImGuiMouseButton_Left));
+
+        // ── Source popup ───────────────────────────────────────────────────
+        {
+            const float popupWidth = ScaleX(200);
+            const float anim = EaseInOutFloat("##SourcePopupAnim", 0.f, 1.f, IsPopupOpen("##SourcePopup"), 0.35f);
+
+            const float popupBtnY = viewport->Size.y - BottomNavBarHeight;
+            float popupY = popupBtnY - ScaleY(135) + ScaleY(6) * (1.f - anim);
+            SetNextWindowPos({ viewport->Size.x - popupWidth - ScaleX(50), popupY });
+            SetNextWindowSize({ popupWidth, ScaleY(140) });
+            SetNextWindowBgAlpha(anim);
+
+            PushStyleColor(ImGuiCol_PopupBg, ImVec4(0.098f, 0.102f, 0.11f, 1.0f));
+            PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 1.0f, 1.0f, 1.0f));
+            PushStyleColor(ImGuiCol_Header, ImVec4(0.15f, 0.155f, 0.165f, 1.0f));
+            PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0.22f, 0.225f, 0.235f, 1.0f));
+            PushStyleColor(ImGuiCol_Border, ImVec4(0.18f, 0.184f, 0.192f, 1.0f));
+            PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(ScaleX(10), ScaleY(10)));
+            PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(ScaleX(8), ScaleY(6)));
+            PushStyleVar(ImGuiStyleVar_PopupRounding, ScaleX(6));
+
+            if (BeginPopup("##SourcePopup", ImGuiWindowFlags_NoMove)) {
+                PushStyleVar(ImGuiStyleVar_Alpha, anim);
+
+                bool isGitHub = (g_SourceMode == SourceMode::GitHub);
+                bool isProxy = (g_SourceMode == SourceMode::GH_Proxy);
+                bool isOffline = (g_SourceMode == SourceMode::Offline);
+
+                if (Selectable(Locale::Get("sourceGithub"), isGitHub)) {
+                    g_SourceMode = SourceMode::GitHub;
+                    g_ServerPrefix.clear();
+                    CloseCurrentPopup();
+                }
+                if (isGitHub) SetItemDefaultFocus();
+
+                if (Selectable(Locale::Get("sourceGhProxy"), isProxy)) {
+                    g_SourceMode = SourceMode::GH_Proxy;
+                    g_ServerPrefix = "https://gh-proxy.org/";
+                    CloseCurrentPopup();
+                }
+                if (isProxy) SetItemDefaultFocus();
+
+                if (Selectable(Locale::Get("sourceOffline"), isOffline)) {
+                    g_SourceMode = SourceMode::Offline;
+                    g_ServerPrefix.clear();
+                    CloseCurrentPopup();
+                }
+                if (isOffline) SetItemDefaultFocus();
+
+                PopStyleVar();
+                EndPopup();
+            }
+
+            PopStyleVar(3);
+            PopStyleColor(5);
+        }
+
+        SameLine(0, ScaleX(25));
+        SetCursorPosY(GetCursorPosY() - ScaleY(15));
 
         // ── Language button ────────────────────────────────────────────────
         Image((ImTextureID)(intptr_t)languageIconTexture, ImVec2(ScaleX(30), ScaleY(30)));
