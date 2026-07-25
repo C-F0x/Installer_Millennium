@@ -38,6 +38,7 @@
 #endif
 #include <format>
 #include <util.h>
+#include <renderer.h>
 
 using namespace ImGui;
 
@@ -78,8 +79,103 @@ const void RenderBottomNavBar(const char* identifier, float xPos, std::function<
 
         const float buttonPos = GetCursorPosY();
 
-        SetCursorPosX(xPos + GetCursorPosX() + GetContentRegionAvail().x - FooterContainerWidth);
+        SetCursorPosX(xPos + GetCursorPosX() + GetContentRegionAvail().x - FooterContainerWidth - ScaleX(55));
         SetCursorPosY(GetCursorPosY() + ScaleY(10));
+
+        // ── Language button ────────────────────────────────────────────────
+        Image((ImTextureID)(intptr_t)languageIconTexture, ImVec2(ScaleX(30), ScaleY(30)));
+
+        static bool isLangButtonHovered = false;
+        float langTooltipAlpha = EaseInOutFloat(std::format("##LangTooltipAlpha{}", identifier).c_str(), 0.f, 1.f, isLangButtonHovered, 0.3f);
+
+        if (langTooltipAlpha != 0.f) {
+            SetMouseCursor(ImGuiMouseCursor_Hand);
+            PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
+            PushStyleColor(ImGuiCol_Border, ImVec4(0.18f, 0.184f, 0.192f, 1.0f));
+            PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 1.0f, 1.0f, 1.0f));
+            PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(ScaleX(10), ScaleY(10)));
+            PushStyleVar(ImGuiStyleVar_WindowRounding, 6);
+            PushStyleVar(ImGuiStyleVar_Alpha, langTooltipAlpha);
+            PushStyleColor(ImGuiCol_PopupBg, ImVec4(0.098f, 0.102f, 0.11f, 1.0f));
+            SetTooltip("%s", Locale::Get("tooltipLanguage"));
+            PopStyleVar(4);
+            PopStyleColor(3);
+        }
+
+        if (IsItemClicked())
+            OpenPopup("##LangPopup");
+
+        isLangButtonHovered = IsItemHovered() || (IsItemHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem) && IsMouseDown(ImGuiMouseButton_Left));
+
+        // ── Language popup ─────────────────────────────────────────────────
+        {
+            ImGuiIO& io = GetIO();
+            ImFont* vietItemFont = (io.Fonts->Fonts.Size > 2) ? io.Fonts->Fonts[2] : nullptr;
+            ImFont* dropdownFont = (io.Fonts->Fonts.Size > 3) ? io.Fonts->Fonts[3] : nullptr;
+
+            const auto& langs = Locale::GetAvailableLanguages();
+            const std::string& currentLangId = Locale::GetCurrentLanguageId();
+
+            const float popupWidth = ScaleX(400);
+            const float popupHeight = ScaleY(500);
+            float anim = EaseInOutFloat("##LangPopupAnim", 0.f, 1.f, IsPopupOpen("##LangPopup"), 0.35f);
+
+            const float popupBtnY = viewport->Size.y - BottomNavBarHeight;
+            float popupY = popupBtnY - popupHeight + ScaleY(6) * (1.f - anim);
+            SetNextWindowPos({ viewport->Size.x - popupWidth - ScaleX(50), popupY });
+            SetNextWindowSize({ popupWidth, popupHeight });
+            SetNextWindowBgAlpha(anim);
+
+            PushStyleColor(ImGuiCol_PopupBg, ImVec4(0.098f, 0.102f, 0.11f, 1.0f));
+            PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 1.0f, 1.0f, 1.0f));
+            PushStyleColor(ImGuiCol_Header, ImVec4(0.15f, 0.155f, 0.165f, 1.0f));
+            PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0.22f, 0.225f, 0.235f, 1.0f));
+            PushStyleColor(ImGuiCol_Border, ImVec4(0.18f, 0.184f, 0.192f, 1.0f));
+            PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(ScaleX(10), ScaleY(10)));
+            PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(ScaleX(8), ScaleY(6)));
+            PushStyleVar(ImGuiStyleVar_PopupRounding, ScaleX(6));
+
+            if (dropdownFont)
+                PushFont(dropdownFont);
+
+            if (BeginPopup("##LangPopup", ImGuiWindowFlags_NoMove)) {
+                if (!::IsWindowFocused())
+                    CloseCurrentPopup();
+                PushStyleVar(ImGuiStyleVar_Alpha, anim);
+                for (const auto& lang : langs) {
+                    bool isSelected = (lang.id == currentLangId);
+                    bool useVietFont = (lang.id == "vietnamese") && (vietItemFont != nullptr);
+                    if (useVietFont) {
+                        if (dropdownFont)
+                            PopFont();
+                        PushFont(vietItemFont);
+                    }
+                    if (Selectable(lang.displayName.c_str(), isSelected, 0, ImVec2(popupWidth, 0))) {
+                        Locale::SetLanguage(lang.id);
+                        RequestFontRebuild();
+                        CloseCurrentPopup();
+                    }
+                    if (isSelected)
+                        SetItemDefaultFocus();
+                    if (useVietFont) {
+                        PopFont();
+                        if (dropdownFont)
+                            PushFont(dropdownFont);
+                    }
+                }
+                PopStyleVar();
+                EndPopup();
+            }
+
+            if (dropdownFont)
+                PopFont();
+
+            PopStyleVar(3);
+            PopStyleColor(5);
+        }
+
+        SameLine(0, ScaleX(25));
+        SetCursorPosY(GetCursorPosY() - ScaleY(15));
 
         Image((ImTextureID)(intptr_t)discordIconTexture, ImVec2(ScaleX(30), ScaleY(30)));
 

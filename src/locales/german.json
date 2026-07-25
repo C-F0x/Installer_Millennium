@@ -55,5 +55,6 @@
     "titlebarTitle": "Steam Homebrew",
 
     "tooltipDiscord": "Discord-Server beitreten",
-    "tooltipGithub": "Quellcode ansehen"
+    "tooltipGithub": "Quellcode ansehen",
+    "tooltipLanguage": "Sprache Ändern"
 }

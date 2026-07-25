@@ -114,12 +114,14 @@ bool RenderTitleBarComponent(std::shared_ptr<RouterNav> router)
         if (isLangButtonHovered)
             PushStyleColor(ImGuiCol_ChildBg, ImVec4(1.f, 1.f, 1.f, 0.06f));
 
+        /* Commented out — language icon moved to bottom bar (bottombar.cc)
         BeginChild("##LangButton", { langButtonDimensions.x, langButtonDimensions.y }, false, ImGuiWindowFlags_NoScrollbar);
         {
             SetCursorPos({ (langButtonDimensions.x - ScaleX(20)) * 0.5f, ScaleY(12) });
             Image((ImTextureID)(intptr_t)languageIconTexture, { ScaleX(20), ScaleY(20) });
         }
         EndChild();
+        */
 
         ImVec2 langBtnMin = GetItemRectMin();
         ImVec2 langBtnMax = GetItemRectMax();
@@ -137,6 +139,7 @@ bool RenderTitleBarComponent(std::shared_ptr<RouterNav> router)
 
         isLangButtonHovered = IsItemHovered();
 
+        /*Migrate to BottomBar
         ImGuiIO& io = GetIO();
         ImFont* vietItemFont = (io.Fonts->Fonts.Size > 2) ? io.Fonts->Fonts[2] : nullptr;
         ImFont* dropdownFont = (io.Fonts->Fonts.Size > 3) ? io.Fonts->Fonts[3] : nullptr;
@@ -198,6 +201,7 @@ bool RenderTitleBarComponent(std::shared_ptr<RouterNav> router)
         PopStyleVar(3);
         PopStyleColor(4);
 
+        */
         SetCursorPos({ viewport->Size.x - closeButtonDimensions.x, 0 });
 
         PushStyleVar(ImGuiStyleVar_ChildRounding, 0);

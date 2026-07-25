@@ -55,5 +55,6 @@
     "titlebarTitle": "Steam Homebrew",
 
     "tooltipDiscord": "Discord サーバーに参加",
-    "tooltipGithub": "ソースコードを見る"
+    "tooltipGithub": "ソースコードを見る",
+    "tooltipLanguage": "言語を変更"
 }

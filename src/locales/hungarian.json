@@ -55,5 +55,6 @@
     "titlebarTitle": "Steam Homebrew",
 
     "tooltipDiscord": "Csatlakozás a Discord-szerverhez",
-    "tooltipGithub": "Forráskód megtekintése"
+    "tooltipGithub": "Forráskód megtekintése",
+    "tooltipLanguage": "Nyelv Váltása"
 }

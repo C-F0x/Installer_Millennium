@@ -55,5 +55,6 @@
     "titlebarTitle": "Steam Homebrew",
 
     "tooltipDiscord": "Присоединиться к Discord",
-    "tooltipGithub": "Посмотреть исходный код"
+    "tooltipGithub": "Посмотреть исходный код",
+    "tooltipLanguage": "Сменить Язык"
 }
